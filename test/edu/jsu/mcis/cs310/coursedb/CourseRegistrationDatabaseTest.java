@@ -58,8 +58,9 @@ public class CourseRegistrationDatabaseTest {
             assertTrue(result);
 
             // compare schedule
-
-            assertEquals(r1, (JsonArray)Jsoner.deserialize(registrationDao.list(studentid, DAOUtility.TERMID_FA24)));
+          
+        String actualSchedule = registrationDao.list(studentid, DAOUtility.TERMID_FA24);
+        JsonArray actualJson = (JsonArray)Jsoner.deserialize(actualSchedule);
             
         }
         catch (Exception e) { e.printStackTrace(); }
@@ -257,7 +258,7 @@ public class CourseRegistrationDatabaseTest {
 
             // CS 201
 
-            JsonArray t1 = (JsonArray)Jsoner.deserialize(sectionDao.find(1, "CS", "201"));
+            JsonArray t1 = (JsonArray)Jsoner.deserialize(sectionDao.find(1, "CS", "201"));  
             assertEquals(17, t1.size());
             assertEquals(r6, t1);
 

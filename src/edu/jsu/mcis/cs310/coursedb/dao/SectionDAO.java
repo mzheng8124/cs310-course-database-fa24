@@ -4,6 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import com.github.cliftonlabs.json_simple.JsonArray;
+import com.github.cliftonlabs.json_simple.JsonObject;
+
+
 
 public class SectionDAO {
     
@@ -15,37 +19,57 @@ public class SectionDAO {
         this.daoFactory = daoFactory;
     }
     
-    public String find(int termid, String subjectid, String num) {
+     public String find(int termId, String subjectId, String courseNum) {
         
-        String result = "[]";
-        
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        ResultSetMetaData rsmd = null;
+        String jsonResult = "[]"; // Default to empty JSON array
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        JsonArray sectionArray = new JsonArray(); // Array to hold section JSON objects
         
         try {
+            Connection connection = daoFactory.getConnection();
             
-            Connection conn = daoFactory.getConnection();
-            
-            if (conn.isValid(0)) {
-                
-                // INSERT YOUR CODE HERE
-                
+            if (connection.isValid(0)) {
+                preparedStatement = connection.prepareStatement(QUERY_FIND);
+                preparedStatement.setInt(1, termId);
+                preparedStatement.setString(2, subjectId);
+                preparedStatement.setString(3, courseNum);
+
+                boolean hasResults = preparedStatement.execute();
+                if (hasResults) {
+                    resultSet = preparedStatement.getResultSet();
+
+                    while (resultSet.next()) {
+                        JsonObject sectionObject = new JsonObject(); // Create JSON object for each section
+                        sectionObject.put("termid", resultSet.getInt("termid")); // Add term ID
+                        sectionObject.put("subjectid", resultSet.getString("subjectid")); // Add subject ID
+                        sectionObject.put("num", resultSet.getString("num")); // Add course number
+
+                        sectionArray.add(sectionObject); // Add to array
+
+                        jsonResult = sectionArray.toString(); // Update result to JSON string
+                    }
+                }
             }
-            
+        } catch (Exception e) {
+            e.printStackTrace(); // Log exception
+        } finally {
+            if (resultSet != null) { 
+                try { 
+                    resultSet.close(); 
+                } catch (Exception e) { 
+                    e.printStackTrace(); 
+                } 
+            }
+            if (preparedStatement != null) { 
+                try { 
+                    preparedStatement.close(); 
+                } catch (Exception e) { 
+                    e.printStackTrace(); 
+                } 
+            }
         }
         
-        catch (Exception e) { e.printStackTrace(); }
-        
-        finally {
-            
-            if (rs != null) { try { rs.close(); } catch (Exception e) { e.printStackTrace(); } }
-            if (ps != null) { try { ps.close(); } catch (Exception e) { e.printStackTrace(); } }
-            
-        }
-        
-        return result;
-        
+        return jsonResult; // Return the JSON result
     }
-    
 }
